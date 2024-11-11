@@ -11,14 +11,11 @@ function knightMoves(from, to) {
     [-1, -2],
   ];
 
-  function createVertexObject(pos) {
-    return { explored: false, l: Infinity, pos };
-  }
-
   function withinBoundaries(x, y) {
     return x < 8 && x >= 0 && y < 8 && y >= 0;
   }
-
+  // Create possiblemove of the from vertex
+  // abiding movement rules of knight and board
   function possibleMoves(from) {
     const moves = [];
     const [fromX, fromY] = from;
@@ -35,32 +32,60 @@ function knightMoves(from, to) {
   }
 
   function breadthFirstSearch(from, to) {
-    let numberOfSteps = 0;
-    const explored = {};
-    const lValue = {};
-    explored[from] = true;
-    lValue[from] = 0;
-    const queue = [from];
-    while (queue.length !== 0) {
-      const vertex = queue.shift();
+    const distances = {};
+    const prevVertex = {};
+    const queue = [];
+    distances[from] = 0;
 
-      for (let move of possibleMoves(vertex)) {
-        if (!explored[move]) {
-          explored[move] = true;
-          lValue[move] = lValue[vertex] + 1;
+    queue.push(from);
+
+    while (queue.length !== 0) {
+      const currentVertex = queue.shift();
+
+      if (currentVertex[0] === to[0] && currentVertex[1] === to[1]) break;
+      const moves = possibleMoves(currentVertex);
+      moves.forEach((move) => (distances[move] = Infinity));
+
+      for (let move of moves) {
+        if (distances[move] === Infinity) {
+          distances[move] = distances[currentVertex] + 1;
+          prevVertex[move] = currentVertex;
           queue.push(move);
         }
       }
     }
 
-    if (explored[to]) {
-      numberOfSteps = lValue[to];
+    if (distances[to] === Infinity) return "Node is not reachable";
+
+    // Reset from node
+    distances[from] = 0;
+    prevVertex[from] = null;
+
+    const path = [];
+    let current = to;
+    while (current !== null) {
+      path.push(current);
+      current = prevVertex[current];
     }
 
-    return numberOfSteps;
+    const steps = distances[to];
+    return { path, steps };
   }
 
-  return breadthFirstSearch(from, to);
+  const result = breadthFirstSearch(from, to);
+  if (typeof result === "string") {
+    console.log(result);
+  }
+
+  const { path, steps } = result;
+  function printEndResult(path, steps) {
+    console.log(`You made it in ${steps} moves, Here's your path: `);
+    while (path.length !== 0) {
+      console.log(path.pop());
+    }
+  }
+
+  printEndResult(path, steps);
 }
 
-console.log(knightMoves([3, 3], [4, 3]));
+knightMoves([3, 3], [3, 6]);
